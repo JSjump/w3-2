@@ -101,10 +101,10 @@ export default function App() {
 
   //  decode event事件
 async function parseTransferEvent(event:any) {    
-  // const TransferEvent = new ethers.utils.Interface(["event Transfer(address indexed from,address indexed to,uint256 value)"]);  
+  const TransferEvent = new ethers.utils.Interface(["event Transfer(address indexed from,address indexed to,uint256 indexed value)"]);  
   // const TransferEvent = new ethers.utils.Interface(["event Transfer(address indexed,address indexed,uint256 indexed)"]);
 
-  let decodedData = token?.interface.parseLog(event);
+  let decodedData = TransferEvent?.parseLog(event);
   console.log("from:",decodedData?.args?.from)
   console.log("to:",decodedData?.args?.to)
   console.log("value:",decodedData?.args?.value?.toString())
