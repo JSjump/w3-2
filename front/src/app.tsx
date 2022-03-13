@@ -112,6 +112,7 @@ async function parseTransferEvent(event:any) {
 }
 
   // 获取事件记录
+  // 监听一般节点不提供。 getLogs 一般都会提供
   async function getLogs() {
     let filter = token?.filters.Transfer(null,account)
     // 获取 开始区块到结束区块之间的 相应event记录
