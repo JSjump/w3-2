@@ -151,7 +151,7 @@ useEffect(() => {
 
 
 useEffect(() => {
-// 事件过滤
+// 事件监听-过滤器方式
 let filter = token?.filters.Transfer(null,account);
 if(filter){
   token?.on(filter, (from, to, tokenId, event) => {
