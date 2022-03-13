@@ -101,30 +101,18 @@ export default function App() {
 
   //  decode event事件
 async function parseTransferEvent(event:any) {    
-  const TransferEvent = new ethers.utils.Interface(["event Transfer(address indexed from,address indexed to,uint256 value)"]);  
+  // const TransferEvent = new ethers.utils.Interface(["event Transfer(address indexed from,address indexed to,uint256 value)"]);  
   // const TransferEvent = new ethers.utils.Interface(["event Transfer(address indexed,address indexed,uint256 indexed)"]);
 
-  let decodedData = TransferEvent.parseLog(event);
-  console.log("from:",decodedData.args?.from)
-  console.log("to:",decodedData.args?.to)
-  console.log("value:",decodedData.args?.value?.toString())
+  let decodedData = token?.interface.parseLog(event);
+  console.log("from:",decodedData?.args?.from)
+  console.log("to:",decodedData?.args?.to)
+  console.log("value:",decodedData?.args?.value?.toString())
     // 调用后台接口 API ，保存至数据库
 }
 
-
-
-
-  // let  filter = {
-  //       address: MyNftAddr.address,
-  //       topics: [
-  //           ethers.utils.id("Transfer(address,address,uint256)")
-  //       ]
-  //   }
-
-
   // 获取事件记录
   async function getLogs() {
-
     let filter = token?.filters.Transfer(null,account)
     // 获取 开始区块到结束区块之间的 相应event记录
     // 若不写 fromBlock，和 toBlock。 则默认获取当前最新区块的event记录
@@ -133,12 +121,16 @@ async function parseTransferEvent(event:any) {
       fromBlock:6530111,
       toBlock:6530897
     }
+    if(modFilter){
+    // 第一种方法： provider?.getLogs()
     let events = await provider?.getLogs(modFilter) || [];
+    // 第二种方法： 获取最近10个区块的数据
+    // let events = await token?.queryFilter(filter, -10, "latest") || [];
     console.log('events',events)
     for (let i = 0; i < events?.length; i++) {
         // console.log(events[i]);
         parseTransferEvent(events[i]);
-
+    }
     }
 }
 
@@ -146,35 +138,24 @@ async function parseTransferEvent(event:any) {
   // 根据token是否变化, 相应token事件监听只挂载一次
 useEffect(() => {
   // 事件监听
+  // 监听当前区块的token的Transfer事件
   token?.on("Transfer", (from, to, tokenId, event) => {
-    console.log('监听Transfer事件start')
-    // 在值变化的时候被调用
-    console.log(from);
-
-    console.log(to);
-
-    console.log(tokenId);
-
+    console.log('事件监听')
     // 查看后面的事件触发器  Event Emitter 了解事件对象的属性
     console.log(event.blockNumber);
-    // 4115004
 });
 
 
+},[token])
 
+
+
+useEffect(() => {
 // 事件过滤
-// 使用签名器地址作为事件触发者进行过滤
 let filter = token?.filters.Transfer(null,account);
 if(filter){
-  token?.on(filter, ( from, to, tokenId, event) => {
-      // const decodedEvent = token.interface.decodeEventLog(
-      //       "Transfer", //
-      //       event.data,
-      //       event.topics
-      //   );
-      //   console.log('decodedEvent',decodedEvent);
-    // 只有我们账号（签名器地址）铸造的nft的才回调
-  console.log('---filter',from, to, tokenId, event)
+  token?.on(filter, (from, to, tokenId, event) => {
+    console.log('事件过滤,provider.on.event',event)
   // 调用后台接口 API ，保存至数据库
   parseTransferEvent(event)
 });
