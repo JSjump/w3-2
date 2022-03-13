@@ -116,6 +116,7 @@ async function parseTransferEvent(event:any) {
     let filter = token?.filters.Transfer(null,account)
     // 获取 开始区块到结束区块之间的 相应event记录
     // 若不写 fromBlock，和 toBlock。 则默认获取当前最新区块的event记录
+    // 不能超过2000
     const modFilter = {
       ...filter,
       fromBlock:6530111,
