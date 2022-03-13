@@ -75,7 +75,7 @@ export default function App() {
     const tn = await token?.name()
     setTokenName(tn)
     const fBalanceOf = await token?.balanceOf(account)
-    setBalanceOf(ethers.utils.formatUnits(fBalanceOf, 18))
+    setBalanceOf(ethers.utils.formatUnits(fBalanceOf, 0))
   }
 
   // console.log()
@@ -100,12 +100,14 @@ export default function App() {
 
 
   //  decode event事件
-async function parseTransferEvent(event:any) {
-  const TransferEvent = new ethers.utils.Interface(["event Transfer(address indexed from,address indexed to,uint256 value)"]);
+async function parseTransferEvent(event:any) {    
+  const TransferEvent = new ethers.utils.Interface(["event Transfer(address indexed from,address indexed to,uint256 value)"]);  
+  // const TransferEvent = new ethers.utils.Interface(["event Transfer(address indexed,address indexed,uint256 indexed)"]);
+
   let decodedData = TransferEvent.parseLog(event);
-  console.log("from:",decodedData.args.from)
-  console.log("to:",decodedData.args.to)
-  console.log("value:",decodedData.args.value)
+  console.log("from:",decodedData.args?.from)
+  console.log("to:",decodedData.args?.to)
+  console.log("value:",decodedData.args?.value?.toString())
     // 调用后台接口 API ，保存至数据库
 }
 
@@ -119,6 +121,26 @@ async function parseTransferEvent(event:any) {
   //       ]
   //   }
 
+
+  // 获取事件记录
+  async function getLogs() {
+
+    let filter = token?.filters.Transfer(null,account)
+    // 获取 开始区块到结束区块之间的 相应event记录
+    // 若不写 fromBlock，和 toBlock。 则默认获取当前最新区块的event记录
+    const modFilter = {
+      ...filter,
+      fromBlock:6530111,
+      toBlock:6530897
+    }
+    let events = await provider?.getLogs(modFilter) || [];
+    console.log('events',events)
+    for (let i = 0; i < events?.length; i++) {
+        // console.log(events[i]);
+        parseTransferEvent(events[i]);
+
+    }
+}
 
 
   // 根据token是否变化, 相应token事件监听只挂载一次
@@ -138,17 +160,19 @@ useEffect(() => {
     // 4115004
 });
 
+
+
 // 事件过滤
 // 使用签名器地址作为事件触发者进行过滤
 let filter = token?.filters.Transfer(null,account);
 if(filter){
   token?.on(filter, ( from, to, tokenId, event) => {
-      const decodedEvent = token.interface.decodeEventLog(
-            "Transfer", //
-            event.data,
-            event.topics
-        );
-        console.log('decodedEvent',decodedEvent);
+      // const decodedEvent = token.interface.decodeEventLog(
+      //       "Transfer", //
+      //       event.data,
+      //       event.topics
+      //   );
+      //   console.log('decodedEvent',decodedEvent);
     // 只有我们账号（签名器地址）铸造的nft的才回调
   console.log('---filter',from, to, tokenId, event)
   // 调用后台接口 API ，保存至数据库
@@ -158,25 +182,6 @@ if(filter){
 },[token])
 
 
-// async function main() {
-//   let [owner, second] = await ethers.getSigners();
-//   let myerc20 = await ethers.getContractAt("MyERC20",
-//       ERC20Addr.address,
-//       owner);
-
-//   let filter = myerc20.filters.Transfer()
-//   filter.fromBlock = 1;
-//   filter.toBlock = 10;
-
-
-//   // let events = await myerc20.queryFilter(filter);
-//   let events = await ethers.provider.getLogs(filter);
-//   for (let i = 0; i < events.length; i++) {
-//       // console.log(events[i]);
-//       parseTransferEvent(events[i]);
-
-//   }
-// }
 
 
 
@@ -261,6 +266,11 @@ if(filter){
             </Button>
           </div>
         </Col>
+      </Row>
+      <Row justify='center' >
+        <Col>
+        <Button onClick={() => getLogs()}>获取logs
+          </Button></Col>
       </Row>
     </div>
   )
